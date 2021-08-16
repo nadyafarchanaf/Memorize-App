@@ -2,73 +2,51 @@
 //  ContentView.swift
 //  Memorize
 //
-//  Created by Asani on 05/08/21.
+//  Created by Nadya Farchana Fidaroina on 05/08/21.
 //
 
 import SwiftUI
 
 struct ContentView: View {
-    var emoji = ["😎", "🙇‍♀️","👌","💕","👀","🪗","🥰","😛","😄","⛔️","🦁","🦋","🐼","🎾"]
-    @State var emojiCount = 6
+    @ObservedObject var viewModel : EmojiMemoryGame
+    
     var body: some View {
-        VStack {
-            Text("Memorize").font(/*@START_MENU_TOKEN@*/.title/*@END_MENU_TOKEN@*/).foregroundColor(.red)
-            ScrollView {
-                LazyVGrid( columns: [GridItem(.adaptive(minimum: 100))]){
-                    ForEach(emoji[0..<emojiCount], id: \.self) { emojis in
-                        CardView(content: emojis).aspectRatio(2/3, contentMode: .fit)
-                    }
+        ScrollView {
+            LazyVGrid( columns: [GridItem(.adaptive(minimum: 65))]){
+                ForEach(viewModel.cards) { card in
+                    CardView(card: card)
+                        .aspectRatio(2/3, contentMode: .fit)
+                        .onTapGesture {
+                            viewModel.choose(card)
+                        }
                 }
             }
-            Spacer()
-            HStack{
-                remove
-                Spacer()
-                add
-            }
-            .font(.largeTitle)
-            .padding(.horizontal)
         }
+        .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
+        .padding(.horizontal)
     }
-    var remove: some View {
-        Button {
-            if emojiCount>1 {
-                emojiCount -= 1
-            }
-        } label: {
-            Image(systemName: "minus.circle")
-        }
-    }
-    var add: some View {
-        Button {
-            if emojiCount<emoji.count{
-                emojiCount += 1
-            }
-        } label: {
-            Image(systemName: "plus.circle")
-        }
-    }
-    struct CardView: View {
-        var content: String
-        @State var isFaceUp: Bool = false
-        
-        var body: some View{
-            let shape = RoundedRectangle(cornerRadius: 10)
-            ZStack {
-                if isFaceUp {
-                    shape.fill().foregroundColor(.white)
-                    shape.strokeBorder(lineWidth:2).foregroundColor(.orange)
-                    Text(content).font(.title).foregroundColor(Color.yellow)
-                } else {
-                    shape.fill().foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
-                }
-            }
-            .onTapGesture {
-                isFaceUp = !isFaceUp
-            }
-        }
+}
 
+struct CardView: View {
+    let card: MemoryGame<String>.Card
+    var body: some View{
+        ZStack {
+            let shape = RoundedRectangle(cornerRadius: 10)
+            if card.isFaceUp {
+                shape.fill().foregroundColor(.white)
+                shape.strokeBorder(lineWidth:2)
+                Text(card.content).font(.largeTitle)
+            } else if card.isMatched {
+                shape.opacity(0)
+            }
+            else {
+                shape.fill()
+            }
+        }
+        .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
     }
+
+}
     
     
     
@@ -80,9 +58,11 @@ struct ContentView: View {
     
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        let game = EmojiMemoryGame()
+        
+        ContentView(viewModel: game)
             .preferredColorScheme(.light)
-            .padding(/*@START_MENU_TOKEN@*/.all/*@END_MENU_TOKEN@*/)
+        ContentView(viewModel: game)
+            .preferredColorScheme(.dark)
     }
-}
 }
